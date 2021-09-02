@@ -1,9 +1,8 @@
 package ru.itsjava.servises;
 
 import lombok.SneakyThrows;
+import ru.itsjava.domain.User;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
 
@@ -11,6 +10,7 @@ public class ClientServiceImpl implements ClientService {
 
     public final static int PORT = 8081;
     public final static String HOST = "localhost";
+    private User user;
 
     @SneakyThrows
     @Override
@@ -20,20 +20,48 @@ public class ClientServiceImpl implements ClientService {
         if (socket.isConnected()) {
             new Thread(new SocketRunnable(socket)).start();
 
-            PrintWriter serverWrite = new PrintWriter(socket.getOutputStream());
+            PrintWriter serverWrite =
+                    new PrintWriter(socket.getOutputStream());
 
-            MessageInputService messageInputService = new MessageInputServiceImpl(System.in);
+            MessageInputService messageInputService =
+                    new MessageInputServiceImpl(System.in);
 
-            System.out.println("Введите сообщение");
-            String consoleMessage = messageInputService.getMessage();
+            System.out.println("Введите свой логин");
+            String login = messageInputService.getMessage();
 
-            serverWrite.println(consoleMessage);
+            System.out.println("Введите сой пароль");
+            String password = messageInputService.getMessage();
+
+            user = new User(login, password);
+
+
+            serverWrite.println("!autho!" + login + ":" + password);
             serverWrite.flush();
 
-            BufferedReader serverReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+            //String consoleMessage = messageInputService.getMessage();
             while (true) {
-                System.out.println(serverReader.readLine());
+                String consoleMessage = messageInputService.getMessage();
+                //consoleMessage = consoleMessage.strip()
+                //if (consoleMessage.contains(user.getName())) {
+
+
+                    if (!consoleMessage.equals("Exit")) {
+                        serverWrite.println(consoleMessage);
+                        serverWrite.flush();
+                    } else {
+                        System.out.println("Вышли из чата");
+                        break;
+                    }
+               // }
             }
         }
     }
+
+//    private void sendMassage(BufferedReader consoleReader, PrintWriter serverWriter) throws IOException {
+//
+//        String string;
+//        while ((string = consoleReader.readLine()) != null) {
+//            println(serverWriter, user.getName() + ":" + string);
+//        }
+//    }
 }
